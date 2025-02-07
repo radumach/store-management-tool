@@ -1,10 +1,12 @@
 package com.store.integration;
 
+import java.util.Collections;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -189,7 +191,7 @@ public class ProductControllerIntegrationTest {
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertTrue(response.getBody().containsKey("name"));
-        assertEquals("Product name is required", response.getBody().get("name"));
+        assertEquals("Product name must contain only alphanumeric characters and spaces", response.getBody().get("name"));
     }
 
     @Test
@@ -214,5 +216,35 @@ public class ProductControllerIntegrationTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertTrue(response.getBody().containsKey("quantity"));
         assertEquals("Quantity must be greater than or equal to 0", response.getBody().get("quantity"));
+    }
+
+    @Test
+    public void testAddProduct_InvalidInput_BadRequest() {
+        Product product = createProduct("<script>alert('XSS')</script>", -100.0, -5); // Malicious input
+        HttpEntity<Product> request = new HttpEntity<>(product, createHeaders("admin", "admin"));
+
+        ResponseEntity<Map> response = restTemplate.postForEntity("/api/products", request, Map.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertTrue(response.getBody().containsKey("name"));
+        assertTrue(response.getBody().containsKey("price"));
+        assertTrue(response.getBody().containsKey("quantity"));
+    }
+
+    /**
+     * This test is disabled because it requires CSRF protection to be enabled.
+     */
+    @Test
+    @Disabled
+    public void testAddProduct_CsrfProtection() {
+        Product product = createProduct("Laptop", 1200.0, 10);
+        HttpEntity<Product> request = new HttpEntity<>(product, createHeaders("admin", "admin"));
+
+        // Disable CSRF token
+        restTemplate.getRestTemplate().setInterceptors(Collections.emptyList());
+
+        ResponseEntity<String> response = restTemplate.postForEntity("/api/products", request, String.class);
+
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     }
 }

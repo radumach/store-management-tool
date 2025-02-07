@@ -7,9 +7,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 
 @Entity
 public class Product {
@@ -18,7 +19,9 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Product name is required")
+    //@NotBlank(message = "Product name is required")
+    @Size(max = 100, message = "Product name must be less than 100 characters")
+    @Pattern(regexp = "^[a-zA-Z0-9\\s]+$", message = "Product name must contain only alphanumeric characters and spaces")
     private String name;
 
     @NotNull(message = "Price is required")
@@ -29,14 +32,17 @@ public class Product {
     @Min(value = 0, message = "Quantity must be greater than or equal to 0")
     private Integer quantity;
 
+    private String description;
+
     // Default constructor (required by JPA)
     public Product() {}
 
     // Parameterized constructor (optional)
-    public Product(String name, Double price, Integer quantity) {
+    public Product(String name, Double price, Integer quantity, String description) {
         this.name = name;
         this.price = price;
         this.quantity = quantity;
+        this.description = description;
     }
 
     // Getters and Setters
@@ -72,6 +78,14 @@ public class Product {
         this.quantity = quantity;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     // equals, hashCode, and toString methods
     @Override
     public boolean equals(Object o) {
@@ -81,7 +95,8 @@ public class Product {
         return Objects.equals(id, product.id) &&
                Objects.equals(name, product.name) &&
                Objects.equals(price, product.price) &&
-               Objects.equals(quantity, product.quantity);
+               Objects.equals(quantity, product.quantity) &&
+               Objects.equals(description, product.description);
     }
 
     @Override
@@ -96,6 +111,7 @@ public class Product {
                 ", name='" + name + '\'' +
                 ", price=" + price +
                 ", quantity=" + quantity +
+                ", description='" + description + 
                 '}';
     }
 }

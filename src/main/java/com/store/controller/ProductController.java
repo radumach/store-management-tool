@@ -2,6 +2,7 @@ package com.store.controller;
 
 import java.util.List;
 
+import org.owasp.encoder.Encode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,6 +31,9 @@ public class ProductController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Product> addProduct(@Valid @RequestBody Product product) {
+        // Sanitize inputs
+        product.setName(Encode.forHtml(product.getName())); // Sanitize HTML
+        product.setDescription(Encode.forJavaScript(product.getDescription())); // Sanitize JavaScript
         return ResponseEntity.ok(productService.addProduct(product));
     }
 
