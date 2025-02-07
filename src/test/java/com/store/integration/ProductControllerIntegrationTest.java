@@ -1,5 +1,7 @@
 package com.store.integration;
 
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -79,8 +81,7 @@ public class ProductControllerIntegrationTest {
                 "/api/products/" + productId + "/price?newPrice=1000.0",
                 HttpMethod.PUT,
                 updateRequest,
-                Product.class
-        );
+                Product.class);
 
         assertEquals(HttpStatus.OK, updateResponse.getStatusCode());
         assertEquals(1000.0, updateResponse.getBody().getPrice());
@@ -101,8 +102,7 @@ public class ProductControllerIntegrationTest {
                 "/api/products/" + productId + "/price?newPrice=250.0",
                 HttpMethod.PUT,
                 updateRequest,
-                String.class
-        );
+                String.class);
 
         assertEquals(HttpStatus.FORBIDDEN, updateResponse.getStatusCode());
     }
@@ -122,8 +122,7 @@ public class ProductControllerIntegrationTest {
                 "/api/products/" + productId,
                 HttpMethod.GET,
                 findRequest,
-                Product.class
-        );
+                Product.class);
 
         assertEquals(HttpStatus.OK, findResponse.getStatusCode());
         assertEquals("Keyboard", findResponse.getBody().getName());
@@ -137,8 +136,7 @@ public class ProductControllerIntegrationTest {
                 "/api/products/999",
                 HttpMethod.GET,
                 request,
-                String.class
-        );
+                String.class);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
@@ -157,8 +155,7 @@ public class ProductControllerIntegrationTest {
                 "/api/products",
                 HttpMethod.GET,
                 request,
-                Product[].class
-        );
+                Product[].class);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertTrue(response.getBody().length > 0);
@@ -169,5 +166,53 @@ public class ProductControllerIntegrationTest {
     public void testUnauthenticatedAccess() {
         ResponseEntity<String> response = restTemplate.getForEntity("/api/products", String.class);
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+    }
+
+    @Test
+    public void testAddProduct_ValidInput_Success() {
+        Product product = createProduct("Smartphone", 800.0, 10);
+        HttpEntity<Product> request = new HttpEntity<>(product, createHeaders("admin", "admin"));
+
+        ResponseEntity<Product> response = restTemplate.postForEntity("/api/products", request, Product.class);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("Smartphone", response.getBody().getName());
+    }
+
+    @Test
+    public void testAddProduct_InvalidName_BadRequest() {
+        Product product = createProduct("", 800.0, 10); // Empty name
+        HttpEntity<Product> request = new HttpEntity<>(product, createHeaders("admin", "admin"));
+
+        ResponseEntity<Map> response = restTemplate.postForEntity("/api/products", request, Map.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertTrue(response.getBody().containsKey("name"));
+        assertEquals("Product name is required", response.getBody().get("name"));
+    }
+
+    @Test
+    public void testAddProduct_InvalidPrice_BadRequest() {
+        Product product = createProduct("Smartphone", -100.0, 10); // Negative price
+        HttpEntity<Product> request = new HttpEntity<>(product, createHeaders("admin", "admin"));
+
+        ResponseEntity<Map> response = restTemplate.postForEntity("/api/products", request, Map.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertTrue(response.getBody().containsKey("price"));
+        assertEquals("Price must be a positive number", response.getBody().get("price"));
+    }
+
+    @Test
+    public void testAddProduct_InvalidQuantity_BadRequest() {
+        Product product = createProduct("Smartphone", 800.0, -5); // Negative quantity
+        HttpEntity<Product> request = new HttpEntity<>(product, createHeaders("admin", "admin"));
+
+        ResponseEntity<Map> response = restTemplate.postForEntity("/api/products", request, Map.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertTrue(response.getBody().containsKey("quantity"));
+        assertEquals("Quantity must be greater than or equal to 0", response.getBody().get("quantity"));
     }
 }

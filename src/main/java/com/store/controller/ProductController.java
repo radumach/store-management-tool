@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.store.model.Product;
 import com.store.service.ProductService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
@@ -27,7 +29,7 @@ public class ProductController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Product> addProduct(@RequestBody Product product) {
+    public ResponseEntity<Product> addProduct(@Valid @RequestBody Product product) {
         return ResponseEntity.ok(productService.addProduct(product));
     }
 

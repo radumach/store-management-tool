@@ -6,6 +6,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 @Entity
 public class Product {
@@ -14,15 +18,22 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Product name is required")
     private String name;
-    private double price;
-    private int quantity;
+
+    @NotNull(message = "Price is required")
+    @Positive(message = "Price must be a positive number")
+    private Double price;
+
+    @NotNull(message = "Quantity is required")
+    @Min(value = 0, message = "Quantity must be greater than or equal to 0")
+    private Integer quantity;
 
     // Default constructor (required by JPA)
     public Product() {}
 
     // Parameterized constructor (optional)
-    public Product(String name, double price, int quantity) {
+    public Product(String name, Double price, Integer quantity) {
         this.name = name;
         this.price = price;
         this.quantity = quantity;
@@ -45,32 +56,32 @@ public class Product {
         this.name = name;
     }
 
-    public double getPrice() {
+    public Double getPrice() {
         return price;
     }
 
-    public void setPrice(double price) {
+    public void setPrice(Double price) {
         this.price = price;
     }
 
-    public int getQuantity() {
+    public Integer getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(int quantity) {
+    public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 
-    // equals and hashCode
+    // equals, hashCode, and toString methods
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Product product = (Product) o;
-        return Double.compare(product.price, price) == 0 &&
-               quantity == product.quantity &&
-               Objects.equals(id, product.id) &&
-               Objects.equals(name, product.name);
+        return Objects.equals(id, product.id) &&
+               Objects.equals(name, product.name) &&
+               Objects.equals(price, product.price) &&
+               Objects.equals(quantity, product.quantity);
     }
 
     @Override
@@ -78,7 +89,6 @@ public class Product {
         return Objects.hash(id, name, price, quantity);
     }
 
-    // toString
     @Override
     public String toString() {
         return "Product{" +
