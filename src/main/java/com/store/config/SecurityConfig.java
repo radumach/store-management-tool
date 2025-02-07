@@ -20,9 +20,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // Disable CSRF (or configure it properly for production)
+            .csrf(csrf -> csrf.disable()) // Disable CSRF for simplicity (enable in production)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/products/**").authenticated() // Secure endpoints
+                .requestMatchers("/api/products").hasRole("ADMIN") // Only ADMIN can access POST /api/products
+                .requestMatchers("/api/products/*/price").hasRole("ADMIN") // Only ADMIN can access PUT /api/products/{id}/price
+                .requestMatchers("/api/products/**").hasAnyRole("USER", "ADMIN") // USER and ADMIN can access other endpoints
                 .anyRequest().permitAll() // Allow all other requests
             )
             .httpBasic(Customizer.withDefaults()); // Use HTTP Basic authentication
@@ -34,13 +36,13 @@ public class SecurityConfig {
     public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
         UserDetails user = User.builder()
                 .username("user")
-                .password(passwordEncoder.encode("password"))
+                .password(passwordEncoder.encode("password")) // Encode password
                 .roles("USER")
                 .build();
 
         UserDetails admin = User.builder()
                 .username("admin")
-                .password(passwordEncoder.encode("admin")) 
+                .password(passwordEncoder.encode("admin")) // Encode password
                 .roles("ADMIN")
                 .build();
 
@@ -49,6 +51,6 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return new BCryptPasswordEncoder(); // Use BCrypt for password encoding
     }
 }

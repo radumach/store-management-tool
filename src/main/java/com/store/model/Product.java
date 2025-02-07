@@ -1,5 +1,7 @@
 package com.store.model;
 
+import java.util.Objects;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -7,23 +9,26 @@ import jakarta.persistence.Id;
 
 @Entity
 public class Product {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String name;
     private double price;
     private int quantity;
 
-    public Product() {
-    }
+    // Default constructor (required by JPA)
+    public Product() {}
 
-    public Product(Long id, String name, double price, int quantity) {
-        this.id = id;
+    // Parameterized constructor (optional)
+    public Product(String name, double price, int quantity) {
         this.name = name;
         this.price = price;
         this.quantity = quantity;
     }
 
+    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -56,6 +61,24 @@ public class Product {
         this.quantity = quantity;
     }
 
+    // equals and hashCode
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Product product = (Product) o;
+        return Double.compare(product.price, price) == 0 &&
+               quantity == product.quantity &&
+               Objects.equals(id, product.id) &&
+               Objects.equals(name, product.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, price, quantity);
+    }
+
+    // toString
     @Override
     public String toString() {
         return "Product{" +
@@ -65,58 +88,4 @@ public class Product {
                 ", quantity=" + quantity +
                 '}';
     }
-
-    public static class Builder {
-        private Long id;
-        private String name;
-        private double price;
-        private int quantity;
-
-        public Builder setId(Long id) {
-            this.id = id;
-            return this;
-        }
-
-        public Builder setName(String name) {
-            this.name = name;
-            return this;
-        }
-
-        public Builder setPrice(double price) {
-            this.price = price;
-            return this;
-        }
-
-        public Builder setQuantity(int quantity) {
-            this.quantity = quantity;
-            return this;
-        }
-
-        public Product build() {
-            return new Product(id, name, price, quantity);
-        }
-    }
-
-    public static Builder builder() {
-        return new Builder();
-    }
-
-    public static Product copy(Product product) {
-        return builder()
-                .setId(product.getId())
-                .setName(product.getName())
-                .setPrice(product.getPrice())
-                .setQuantity(product.getQuantity())
-                .build();
-    }
-
-    public static Product copy(Product product, double newPrice) {
-        return builder()
-                .setId(product.getId())
-                .setName(product.getName())
-                .setPrice(newPrice)
-                .setQuantity(product.getQuantity())
-                .build();
-    }
-
 }
