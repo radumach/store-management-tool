@@ -1,0 +1,25 @@
+{
+    "family": "spring-boot-task",
+    "networkMode": "awsvpc",
+    "requiresCompatibilities": ["FARGATE"],
+    "executionRoleArn": "arn:aws:iam::<AWS_ACCOUNT_ID>:role/ecsTaskExecutionRole",
+    "cpu": "512",
+    "memory": "1024",
+    "containerDefinitions": [
+      {
+        "name": "store-management-tool",
+        "image": "radumach/store-management-tool:latest",
+        "cpu": 512,
+        "memory": 1024,
+        "essential": true,
+        "portMappings": [
+          {
+            "containerPort": 8080,
+            "hostPort": 8080,
+            "protocol": "tcp"
+          }
+        ]
+      }
+    ]
+  }
+  
