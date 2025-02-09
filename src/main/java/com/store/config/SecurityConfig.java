@@ -1,22 +1,27 @@
 package com.store.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
+
+import com.store.security.JwtRequestFilter;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    @Autowired
+    private JwtRequestFilter jwtRequestFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -39,6 +44,9 @@ public class SecurityConfig {
                         .frameOptions(frame -> frame
                                 .sameOrigin()))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/login").permitAll() // Allow access to /login
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/products").hasRole("ADMIN") // Only ADMIN can access POST /api/products
                         .requestMatchers("/api/products/*/price").hasRole("ADMIN") // Only ADMIN can access PUT
                                                                                    // /api/products/{id}/price
@@ -47,29 +55,34 @@ public class SecurityConfig {
                         .anyRequest().permitAll() // Allow all other requests
                 )
                 .httpBasic(Customizer.withDefaults()); // Use HTTP Basic authentication
-
+        http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
-    @Bean
-    public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
-        UserDetails user = User.builder()
-                .username("user")
-                .password(passwordEncoder.encode("password")) // Encode password
-                .roles("USER")
-                .build();
+//     @Bean
+//     public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
+//         UserDetails user = User.builder()
+//                 .username("user")
+//                 .password(passwordEncoder.encode("password")) // Encode password
+//                 .roles("USER")
+//                 .build();
 
-        UserDetails admin = User.builder()
-                .username("admin")
-                .password(passwordEncoder.encode("admin")) // Encode password
-                .roles("ADMIN")
-                .build();
+//         UserDetails admin = User.builder()
+//                 .username("admin")
+//                 .password(passwordEncoder.encode("admin")) // Encode password
+//                 .roles("ADMIN")
+//                 .build();
 
-        return new InMemoryUserDetailsManager(user, admin);
-    }
+//         return new InMemoryUserDetailsManager(user, admin);
+//     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(); // Use BCrypt for password encoding
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
     }
 }
