@@ -45,10 +45,16 @@ jobs:
       - name: Build Docker image
         run: |
           docker build -t store-management-tool:latest .
+          docker images
+
+      - name: Verify Docker image exists
+        run: docker image inspect store-management-tool:latest
 
       - name: Save Docker image as artifact
+        run: docker save -o store-management-tool.tar store-management-tool:latest
+
+      - name: Upload Docker image artifact
         uses: actions/upload-artifact@v4
         with:
           name: docker-image
-          path: |
-            docker save -o store-management-tool.tar store-management-tool:latest
+          path: store-management-tool.tar
