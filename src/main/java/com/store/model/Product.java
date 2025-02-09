@@ -37,6 +37,12 @@ public class Product {
     // Default constructor (required by JPA)
     public Product() {}
 
+    public Product(String name, Double price, Integer quantity) {
+        this.name = name;
+        this.price = price;
+        this.quantity = quantity;
+    }
+
     // Parameterized constructor (optional)
     public Product(String name, Double price, Integer quantity, String description) {
         this.name = name;
